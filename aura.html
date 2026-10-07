@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5.0">
+<title>Aura Studio V2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
+body{background:#03040a;color:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:440px;background:rgba(15,20,38,.75);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:22px;backdrop-filter:blur(20px)}
+h1{font-size:1.2rem;margin-bottom:14px;text-align:center;background:linear-gradient(135deg,#22d3ee,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mode{display:flex;background:rgba(2,4,12,.6);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:4px;gap:4px;margin-bottom:14px}
+.mode button{flex:1;padding:10px;border-radius:10px;border:none;background:transparent;color:#7c8ba3;font-weight:800;cursor:pointer}
+.mode button.active{background:linear-gradient(135deg,#22d3ee,#8b5cf6);color:#fff}
+.drop{border:2px dashed rgba(255,255,255,.15);border-radius:18px;padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:14px;position:relative;transition:.3s}
+.drop.has{border-color:#10b981;background:rgba(16,185,129,.08)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop .icon{font-size:2rem;margin-bottom:8px}
+.drop .label{font-weight:800}
+.drop .desc{font-size:.75rem;color:#7c8ba3;margin-top:4px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.78rem;color:#7c8ba3;margin-bottom:6px;font-weight:700}
+.field input{width:100%;background:rgba(2,4,12,.7);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 14px;color:#fff;font-size:.9rem;outline:none;direction:ltr;text-align:left}
+.field input:focus{border-color:#22d3ee}
+.btn{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#22d3ee,#8b5cf6,#ec4899);color:#fff;font-weight:900;font-size:1rem;cursor:pointer;margin-top:8px;font-family:inherit}
+.btn:disabled{opacity:.5}
+.btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:.85rem;padding:12px;margin-top:8px}
+.status{display:none;margin-top:14px;background:rgba(2,4,12,.7);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;font-family:monospace;font-size:.72rem;color:#94a3b8;direction:ltr;text-align:left;max-height:220px;overflow-y:auto;white-space:pre-wrap}
+.result{display:none;margin-top:14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;text-align:center}
+.result h3{color:#6ee7b7;margin-bottom:10px;font-size:1rem}
+.result .link{background:rgba(0,0,0,.4);border-radius:8px;padding:10px;margin-bottom:6px;font-family:monospace;font-size:.72rem;direction:ltr;text-align:left;word-break:break-all;color:#67e8f9}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(150%);background:#10b981;color:#022c22;padding:12px 20px;border-radius:30px;font-weight:800;font-size:.85rem;transition:.4s;z-index:99}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:#ef4444;color:#fff}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;padding:20px;overflow-y:auto}
+.modal.show{display:flex;align-items:center;justify-content:center}
+.modal-box{background:#0b1020;border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:20px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+.modal-box h3{margin-bottom:14px;font-size:1rem}
+.tabs{display:flex;gap:4px;background:rgba(2,4,12,.6);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{flex:1;padding:9px;border-radius:9px;border:none;background:transparent;color:#7c8ba3;font-weight:800;cursor:pointer;font-size:.78rem}
+.tabs button.active{background:linear-gradient(135deg,#22d3ee,#8b5cf6);color:#fff}
+.tab{display:none}
+.tab.active{display:block}
+textarea{width:100%;background:rgba(2,4,12,.7);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;color:#fff;font-size:.7rem;font-family:monospace;resize:vertical;min-height:100px;outline:none;direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>⚡ Aura Studio V2</h1>
+  <div class="mode" id="modeTabs">
+    <button class="active" data-mode="web" onclick="setMode('web',this)">🌐 موقع</button>
+    <button data-mode="apk" onclick="setMode('apk',this)">📱 APK</button>
+  </div>
+
+  <div class="drop" id="dropBox">
+    <input type="file" id="zipFile" accept=".zip" onchange="fileChosen(event)">
+    <div class="icon">📦</div>
+    <div class="label" id="dropLabel">اضغط لاختيار ملف ZIP</div>
+    <div class="desc">يحتوي على index.html + admin.html + api/</div>
+  </div>
+
+  <div class="field">
+    <label>✏️ اسم المشروع (إنجليزي)</label>
+    <input type="text" id="siteName" placeholder="pdf-site" value="pdf-site">
+  </div>
+
+  <button class="btn" id="deployBtn" onclick="startProcess()">🚀 رفع المشروع</button>
+  <button class="btn ghost" onclick="openSettings()">⚙️ الإعدادات (التوكنات)</button>
+
+  <div class="status" id="statusText"></div>
+  <div class="result" id="resultSheet">
+    <h3>🎉 تم النشر بنجاح!</h3>
+    <div id="linksList"></div>
+    <button class="btn ghost" onclick="copyAllLinks()">📋 نسخ كل الروابط</button>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="modal-box">
+    <h3>⚙️ الإعدادات</h3>
+    <div class="tabs">
+      <button class="active" onclick="switchTab('tokens',this)">🔑 التوكنات</button>
+      <button onclick="switchTab('firebase',this)">🔥 Firebase</button>
+    </div>
+    <div class="tab active" id="tabTokens">
+      <div class="field">
+        <label>GitHub Token</label>
+        <input type="password" id="ghToken" placeholder="ghp_...">
+      </div>
+      <div class="field">
+        <label>Vercel Token</label>
+        <input type="password" id="vcToken" placeholder="vcp_...">
+      </div>
+    </div>
+    <div class="tab" id="tabFirebase">
+      <div class="field">
+        <label>Project ID</label>
+        <input type="text" id="fbPid">
+      </div>
+      <div class="field">
+        <label>Client Email</label>
+        <input type="text" id="fbEmail">
+      </div>
+      <div class="field">
+        <label>Private Key</label>
+        <textarea id="fbKey"></textarea>
+      </div>
+    </div>
+    <button class="btn" onclick="saveSettings()">💾 حفظ</button>
+    <button class="btn ghost" onclick="closeSettings()">إلغاء</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   🔥 Firebase — مبني مسبقاً (لا تحتاج إدخاله)
+   ═══════════════════════════════════════════════════════════ */
+var FIREBASE_BUILTIN = {
+  pid: "pdf-tools-7230f",
+  email: "firebase-adminsdk-fbsvc@pdf-tools-7230f.iam.gserviceaccount.com",
+  key: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCxOvK1Qrg39Ogz
+CL16mcJRnMcnzMC9F8lOeqhaBQWoyhlSanmPNsDoRxQ83kcEhJVqZ291BX681YIE
+j7K2fSVSUqQnTE5Irz1dIQCAeWgLFQx6eQJFO2BUKD5O2NvSvfWEuuo4AFcw2jcW
+5iwl+VKec7tZwNdS6kd06z9Zfr42baNu7r19noNfWgqsyQKjjhKaRGIJEbCNtPwd
+TpWspO36KZK/EyPBOBFCQ+Ak3Geh5StJkQ+4f9Co6psdaRXHSBEpL6zdn+Ubp0PO
+ZDksnshJYSX8DVbcDeJlOzaM5xEGlO2rgSAo7x561/aFzmNn4nwCrid2XDXFNzxy
+6pPdOcBPAgMBAAECggEAM8jCk/3br9XqZsb9/i2hHpGNi26DPn0Nv9WNDUh8X9Y1
+UeR0gkkAUp46JpLX81T+B2oTogCqCGjmJYkLMdEdL5GgDy93jDtP1b9H00ImCV7s
+F3j2Fd6EhfKASi+JA2mnrFGlEBnhYA/SmulEKxBPeKbeLhpvj/WOTXZTO0YSM/qW
+YM/VDkY2XLkrhE+9boYf2McRqWR3aE7LAR3bxMoJGKgu/BRVGIqFu+WmAEyrjSyn
+Y810r914t7b2HSH2A5dyZOvLfW43FkOpqu2eHTp1ZxWekzVCASdZgT4Xk7xppOyl
+niebNxZo6TMY6ATt7eMUiI6NCKgsIvfdlyL1k7GcqQKBgQDhnX/tQEp1bty3//MC
+Nk3bm1mwARePgo+jC39xv9ePjr1GHJ3AStM7Ruyx8VR5k8WFGPwOn2QwN83wZBY2
+597PruPJC89OINlpw0LdPqFZc6iuq4o333ztKfe6RuaceGSZlyEehuliCBwUBgPX
+Lx9jgyK84EFsCRFxnUmRYF7wZQKBgQDJGUmfgjpPmDwUbGGdrlKsGEPmXTA420GJ
+5M+653GljzG/pKxs+5fBDc+pb51t0sNiHAlEPtiWaagNgUs8Kp48l9o49nZ2pb3S
+yidmuGnRsLBGiK1MAeHe6TYGgnSxO2san3mQCrtyCtue+Lpb16Mm41Ct2wgZ5IWB
+esfBp0jwowKBgQCJwQ/N/ZY485LCqf1nWV7aepUdWN1Y23/2LlwHSPpGBgJdH7XW
+JhmpNNnqoA5TGT3d0W59Qyb6JeiRIZtKtPKfXgpow9Q0wOvensFhsw7zPiI9XDHN
+gaCWcix2yTmfSgcqnFM1f2xaVddHBpErvvLsYLJCHq7zVuoWs9GqeOwe3QKBgCqz
+b+qq4G7eSIOdr+yng25/iIt15jNsezIon+N0GbGqAkpLUUGi+spHgHzd8nPLeSlw
+Ape3MI5fyQt1FOClvAvpwrCtxOHUt8X2nv800WNxPTz88K9fBvMqWgpv0Q+BKnDw
+xANOBBdnLtNGxWuTElXDlvITvFijKaYgyCHav6Y5AoGAI9N/ivq8SNYRVj5YYAFV
+UZ3GRKX+t973RBRiTJ1pPXH14UgUiegiP5Lzk8Ikho8fgHIVCGIJcDd1t7DrlnO5
+GP2B7xymnr1zofWh1wwMhjdubTBvxbJXrmt24rceH1DelJSyQ4Kki6JaTpCE6qoT
+yzzJLKEjVmxK0CjM8cB1kO0=
+-----END PRIVATE KEY-----`
+};
+
+var currentMode = 'web';
+var ghToken = localStorage.getItem('gh_v2') || '';
+var vcToken = localStorage.getItem('vc_v2') || '';
+var allLinks = [];
+
+function setMode(m, btn) {
+  currentMode = m;
+  document.querySelectorAll('#modeTabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function openSettings() {
+  document.getElementById('ghToken').value = ghToken;
+  document.getElementById('vcToken').value = vcToken;
+  document.getElementById('fbPid').value = FIREBASE_BUILTIN.pid;
+  document.getElementById('fbEmail').value = FIREBASE_BUILTIN.email;
+  document.getElementById('fbKey').value = FIREBASE_BUILTIN.key;
+  document.getElementById('settingsModal').classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
+function switchTab(t, btn) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
+}
+function saveSettings() {
+  ghToken = document.getElementById('ghToken').value.trim();
+  vcToken = document.getElementById('vcToken').value.trim();
+  localStorage.setItem('gh_v2', ghToken);
+  localStorage.setItem('vc_v2', vcToken);
+  closeSettings();
+  toast('تم الحفظ ✓');
+}
+function fileChosen(e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  document.getElementById('dropBox').classList.add('has');
+  document.getElementById('dropLabel').innerText = '✓ ' + f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)';
+}
+function toast(msg, isErr) {
+  var el = document.getElementById('toast');
+  el.textContent = (isErr ? '⚠️ ' : '✅ ') + msg;
+  el.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+function log(txt) {
+  var el = document.getElementById('statusText');
+  el.style.display = 'block';
+  el.innerText += '> ' + txt + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+function b64(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p1) => String.fromCharCode('0x' + p1)));
+}
+
+async function setVercelEnv(projectName) {
+  var envs = [
+    { key: 'FIREBASE_PROJECT_ID', value: FIREBASE_BUILTIN.pid },
+    { key: 'FIREBASE_CLIENT_EMAIL', value: FIREBASE_BUILTIN.email },
+    { key: 'FIREBASE_PRIVATE_KEY', value: FIREBASE_BUILTIN.key }
+  ];
+  try {
+    var existing = [];
+    var r = await fetch('https://api.vercel.com/v9/projects/' + encodeURIComponent(projectName) + '/env', {
+      headers: { 'Authorization': 'Bearer ' + vcToken }
+    });
+    if (r.ok) { var d = await r.json(); existing = (d.envs || []).map(e => e.key); }
+    for (var env of envs) {
+      if (existing.includes(env.key)) { log('↻ ' + env.key + ' موجود'); continue; }
+      var res = await fetch('https://api.vercel.com/v10/projects/' + encodeURIComponent(projectName) + '/env', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + vcToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: env.key, value: env.value, type: 'encrypted', target: ['production', 'preview', 'development'] })
+      });
+      if (res.ok) log('✓ ' + env.key);
+      else log('✗ ' + env.key);
+    }
+  } catch(e) { log('✗ ' + e.message); }
+}
+
+async function startProcess() {
+  var file = document.getElementById('zipFile').files[0];
+  var name = document.getElementById('siteName').value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+  if (!file) { toast('اختر ملف ZIP', true); return; }
+  if (!name) { toast('اكتب اسم المشروع', true); return; }
+  if (!ghToken || !vcToken) { toast('أضف التوكنات من الإعدادات', true); return; }
+
+  var btn = document.getElementById('deployBtn');
+  btn.disabled = true;
+  document.getElementById('statusText').innerText = '';
+  document.getElementById('resultSheet').style.display = 'none';
+
+  try {
+    log('📦 فتح الملف...');
+    var zip = await JSZip.loadAsync(file);
+    var fileMap = {};
+    var allPaths = Object.keys(zip.files).filter(p => !zip.files[p].dir);
+    var marker = allPaths.find(p => p.endsWith('index.html') || p.endsWith('package.json'));
+    var prefix = '';
+    if (marker && marker.includes('/')) prefix = marker.substring(0, marker.lastIndexOf('/') + 1);
+    for (var path of allPaths) {
+      if (path.includes('node_modules/') || path.includes('.git/')) continue;
+      var clean = path;
+      if (prefix && clean.startsWith(prefix)) clean = clean.slice(prefix.length);
+      if (!clean) continue;
+      fileMap[clean] = await zip.files[path].async('base64');
+    }
+    log('✓ ' + Object.keys(fileMap).length + ' ملف');
+
+    log('⚙️ إضافة vercel.json...');
+    fileMap['vercel.json'] = b64(JSON.stringify({ version: 2, cleanUrls: true, trailingSlash: false }, null, 2));
+
+    log('🔐 GitHub...');
+    var ur = await fetch('https://api.github.com/user', { headers: { 'Authorization': 'token ' + ghToken } });
+    if (!ur.ok) throw new Error('GitHub token غير صالح');
+    var username = (await ur.json()).login;
+    log('👤 ' + username);
+
+    await fetch('https://api.github.com/user/repos', {
+      method: 'POST',
+      headers: { 'Authorization': 'token ' + ghToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, private: false, auto_init: true })
+    });
+    await new Promise(r => setTimeout(r, 1500));
+
+    log('⬆️ رفع الملفات...');
+    for (var key in fileMap) {
+      var sha = '';
+      try {
+        var chk = await fetch('https://api.github.com/repos/' + username + '/' + name + '/contents/' + key, {
+          headers: { 'Authorization': 'token ' + ghToken }
+        });
+        if (chk.ok) { var ck = await chk.json(); sha = ck.sha || ''; }
+      } catch(e){}
+      var body = { message: 'Update ' + key, content: fileMap[key] };
+      if (sha) body.sha = sha;
+      await fetch('https://api.github.com/repos/' + username + '/' + name + '/contents/' + key, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + ghToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+    log('✓ GitHub OK');
+
+    log('🌐 Vercel...');
+    await fetch('https://api.vercel.com/v10/projects', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + vcToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, framework: null })
+    });
+    log('🔐 Env vars...');
+    await setVercelEnv(name);
+
+    log('🚀 نشر...');
+    var filesForVercel = Object.keys(fileMap).map(k => ({ file: k, data: fileMap[k], encoding: 'base64' }));
+    var vRes = await fetch('https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1&forceNew=1', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + vcToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, project: name, files: filesForVercel, target: 'production' })
+    });
+    var vData = await vRes.json();
+    if (!vRes.ok) throw new Error((vData.error && vData.error.message) || 'فشل النشر');
+    log('✓ تم النشر');
+
+    var siteUrl = 'https://' + vData.url;
+    try {
+      var pj = await fetch('https://api.vercel.com/v9/projects/' + encodeURIComponent(name), {
+        headers: { 'Authorization': 'Bearer ' + vcToken }
+      });
+      if (pj.ok) {
+        var pjData = await pj.json();
+        var alias = pjData.targets && pjData.targets.production && pjData.targets.production.alias && pjData.targets.production.alias[0];
+        if (alias) siteUrl = 'https://' + (typeof alias === 'string' ? alias : alias.domain);
+      }
+    } catch(e){}
+    siteUrl = siteUrl.replace(/\/$/, '');
+
+    allLinks = [{ name: 'الموقع', url: siteUrl + '/' }];
+    if (fileMap['admin.html']) allLinks.push({ name: 'لوحة التحكم', url: siteUrl + '/admin.html' });
+
+    document.getElementById('linksList').innerHTML = allLinks.map(l =>
+      '<div class="link"><strong style="color:#67e8f9">' + l.name + ':</strong><br>' + l.url + '</div>'
+    ).join('');
+    document.getElementById('resultSheet').style.display = 'block';
+    toast('تم النشر!');
+  } catch(e) {
+    log('❌ ' + e.message);
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copyAllLinks() {
+  var txt = allLinks.map(l => l.name + ': ' + l.url).join('\n');
+  navigator.clipboard.writeText(txt);
+  toast('تم النسخ');
+}
+</script>
+</body>
+</html>
