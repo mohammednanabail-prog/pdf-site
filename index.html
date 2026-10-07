@@ -89,6 +89,17 @@
     return vipExpire && Date.now() < parseInt(vipExpire);
   }
 
+  /* ========== 🎯 حقن Monetag فوراً (قبل انتظار API) ========== */
+  if (!isVipActive()) {
+    const monetagScript = document.createElement('script');
+    monetagScript.src = "https://quge5.com/88/tag.min.js";
+    monetagScript.setAttribute('data-zone', '289087');
+    monetagScript.async = true;
+    monetagScript.setAttribute('data-cfasync', 'false');
+    monetagScript.setAttribute('data-monetag-injected', '1');
+    document.head.appendChild(monetagScript);
+  }
+
   /* ========== API Configuration ========== */
   const API_BASE = '/api/referral.js';
   async function apiCall(action, body) {
@@ -124,7 +135,7 @@
     }
   };
 
-  /* ========== Monetag Injector ========== */
+  /* ========== Monetag Injector (للاستخدام لاحقاً من API) ========== */
   function injectMonetag(cfg) {
     if (!cfg || !cfg.enabled || !cfg.scriptUrl) return;
     if (document.querySelector('script[data-monetag-injected]')) return;
@@ -923,15 +934,12 @@ ar:{
     logo_sub:"صورك في ملف واحد",pages_label:"صفحة",nav_home:"الرئيسية",nav_tools:"الأدوات",nav_ai:"الذكاء",
     badge:"أداة احترافية وسهلة الاستخدام",hero_tag:"محول PDF الذكي",hero_t1:"حوّل صورك إلى",hero_t2:"ملف PDF",hero_t3:"احترافي",
     hero_sub:"أضف عدداً غير محدود من الصور، أو ارفع ملفات PDF وافحصها بالذكاء الاصطناعي مع تسمية ذكية للملف النهائي.",
-    qf1_h:"عدد غير محدود",qf1_p:"من الصور في ملف واحد",qf2_h:"جميع الصيغ",qf2_p:"JPG · PNG · WebP · PDF",
-    qf3_h:"تسمية ذكية",qf3_p:"اسم مناسب لملفك",qf4_h:"آمن وموثوق",qf4_p:"خصوصيتك محفوظة 100%",
+    qf1_h:"عدد غير محدود",qf1_p:"من الصور في ملف واحد",qf2_h:"جميع الصيغ",qf2_p:"JPG · PNG · WebP · PDF",qf3_h:"تسمية ذكية",qf3_p:"اسم مناسب لملفك",qf4_h:"آمن وموثوق",qf4_p:"خصوصيتك محفوظة 100%",
     up_title:"اسحب الملفات هنا",up_sub:"أو اختر من جهازك (صور أو ملفات PDF)",up_btn:"اختر الملفات",up_hint:"كل المعالجة تتم في متصفحك",
     ai_off:"الذكاء الاصطناعي غير مُفعّل",ai_on:"التحليل الذكي مُفعّل (Gemini)",ai_key:"المفتاح محفوظ",
-    fname_label:"اسم الملف النهائي",opts_label:"خيارات إضافية",q_label:"جودة الصور",q1:"عالية جداً",q2:"عالية",q3:"متوسطة",
-    o_label:"اتجاه الصفحة",o1:"تلقائي ذكي",o2:"عمودي",o3:"أفقي",s_label:"حجم الصفحة",s1:"ملء الصورة",
+    fname_label:"اسم الملف النهائي",opts_label:"خيارات إضافية",q_label:"جودة الصور",q1:"عالية جداً",q2:"عالية",q3:"متوسطة",o_label:"اتجاه الصفحة",o1:"تلقائي ذكي",o2:"عمودي",o3:"أفقي",s_label:"حجم الصفحة",s1:"ملء الصورة",
     conv_btn:"تحويل إلى PDF",img_lbl:"الصور:",reorder:"اسحب الكارد لإعادة الترتيب",ai_btn:"تحليل ذكي واقتراح اسم",ai_btn_load:"جاري التحليل...",clear_btn:"مسح الكل",
-    ai_res_t:"نتيجة التحليل الذكي",ai_res_l:"جاري تحليل الصور...",ai_res_sending:"جاري إرسال الصور...",ai_res_scanning:"جاري التحليل...",ai_res_wait:"يرجى الانتظار",
-    ai_res_failed:"فشل التحليل",ai_res_detected:"وثيقة — الاسم جاهز",
+    ai_res_t:"نتيجة التحليل الذكي",ai_res_l:"جاري تحليل الصور...",ai_res_sending:"جاري إرسال الصور...",ai_res_scanning:"جاري التحليل...",ai_res_wait:"يرجى الانتظار",ai_res_failed:"فشل التحليل",ai_res_detected:"وثيقة — الاسم جاهز",
     scan_t:"المستندات المفحوصة",scan_pre:"تم فحص",scan_of:"من",scan_suf:"مستند",add_docs:"إضافة",scan_all:"فحص الكل",scan_all_load:"جاري الفحص",
     zip_all:"تحميل الكل ZIP",done_t:"هل انتهيت؟",done_s:"اضغط هنا للتنزيل",dl_all:"تحميل الكل",
     why_us:"لماذا تختارنا?",f1_h:"تسمية ذكية",f1_p:"اسم مناسب لملفك",f2_h:"اكتشاف متعدد",f2_p:"يحدد كل وثيقة",f3_h:"جودة عالية",f3_p:"حافظ على وضوح صورك",f4_h:"تحميل ZIP",f4_p:"كل الملفات في ضغطة",
@@ -962,8 +970,7 @@ en:{
     ai_off:"AI not enabled",ai_on:"AI analysis enabled (Gemini)",ai_key:"Key saved",fname_label:"Final file name",opts_label:"Additional options",
     q_label:"Image quality",q1:"Very high",q2:"High",q3:"Medium",o_label:"Page orientation",o1:"Smart auto",o2:"Portrait",o3:"Landscape",s_label:"Page size",s1:"Fit image",
     conv_btn:"Convert to PDF",img_lbl:"Images:",reorder:"Drag cards to reorder",ai_btn:"AI analyze & suggest name",ai_btn_load:"Analyzing...",clear_btn:"Clear all",
-    ai_res_t:"AI Analysis Result",ai_res_l:"Analyzing images...",ai_res_sending:"Sending images...",ai_res_scanning:"Analyzing...",ai_res_wait:"Please wait",
-    ai_res_failed:"Analysis failed",ai_res_detected:"document(s) — name ready",
+    ai_res_t:"AI Analysis Result",ai_res_l:"Analyzing images...",ai_res_sending:"Sending images...",ai_res_scanning:"Analyzing...",ai_res_wait:"Please wait",ai_res_failed:"Analysis failed",ai_res_detected:"document(s) — name ready",
     scan_t:"Scanned Documents",scan_pre:"Scanned",scan_of:"of",scan_suf:"documents",add_docs:"Add",scan_all:"Scan all",scan_all_load:"Scanning",
     zip_all:"Download all ZIP",done_t:"Done?",done_s:"Click to download",dl_all:"Download all",
     why_us:"Why choose us?",f1_h:"Smart naming",f1_p:"A suitable name for your file",f2_h:"Multi detection",f2_p:"Detects each document",f3_h:"High quality",f3_p:"Keep your images clear",f4_h:"ZIP download",f4_p:"All files in one click",
@@ -994,8 +1001,7 @@ fr:{
     ai_off:"IA désactivée",ai_on:"Analyse IA activée (Gemini)",ai_key:"Clé enregistrée",fname_label:"Nom du fichier",opts_label:"Options supplémentaires",
     q_label:"Qualité",q1:"Très haute",q2:"Haute",q3:"Moyenne",o_label:"Orientation",o1:"Auto",o2:"Portrait",o3:"Paysage",s_label:"Taille",s1:"Adapter",
     conv_btn:"Convertir en PDF",img_lbl:"Images:",reorder:"Glissez pour réorganiser",ai_btn:"Analyse IA & suggestion",ai_btn_load:"Analyse...",clear_btn:"Tout effacer",
-    ai_res_t:"Résultat de l'analyse",ai_res_l:"Analyse des images...",ai_res_sending:"Envoi...",ai_res_scanning:"Analyse...",ai_res_wait:"Veuillez patienter",
-    ai_res_failed:"Échec",ai_res_detected:"document(s) — nom prêt",
+    ai_res_t:"Résultat de l'analyse",ai_res_l:"Analyse des images...",ai_res_sending:"Envoi...",ai_res_scanning:"Analyse...",ai_res_wait:"Veuillez patienter",ai_res_failed:"Échec",ai_res_detected:"document(s) — nom prêt",
     scan_t:"Documents analysés",scan_pre:"Analysés",scan_of:"sur",scan_suf:"documents",add_docs:"Ajouter",scan_all:"Tout analyser",scan_all_load:"Analyse",
     zip_all:"Télécharger tout ZIP",done_t:"Terminé?",done_s:"Cliquez pour télécharger",dl_all:"Tout télécharger",
     why_us:"Pourquoi nous choisir?",f1_h:"Nommage intelligent",f1_p:"Un nom adapté",f2_h:"Multi détection",f2_p:"Détecte chaque document",f3_h:"Haute qualité",f3_p:"Gardez vos images nettes",f4_h:"Téléchargement ZIP",f4_p:"Tous les fichiers en un clic",
@@ -2428,7 +2434,7 @@ async function analyzeAllImages(images) {
 }
 function renderImagesAiResult(result) {
     latestImagesAIResult = result;
-    const na = currentLang === 'ar' ? 'غير محدد' : (currentLang === 'fr' ? 'Non spécifié' : 'Not specified');
+    const na = currentLang === 'ar' ? 'غير محدد' : 'Not specified';
     const pNA = !result.personName || result.personName === na;
     const cNA = !result.country || result.country === na;
     const html = buildDocumentChips(result.documents) +
@@ -2480,7 +2486,7 @@ function buildScanCard(doc, i) {
     else if (doc.status === 'done') status = '<span class="ssb done"><i class="fa-solid fa-circle-check"></i> Done</span>';
     else status = '<span class="ssb waiting" style="color:#f87171;border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1)"><i class="fa-solid fa-triangle-exclamation"></i> Failed</span>';
     let chips = '';
-    const na = currentLang === 'ar' ? 'غير محدد' : 'Not specified';
+    const na = 'Not specified';
     if (doc.status === 'done' && doc.documentTypes && doc.documentTypes.length > 0) {
         const pNA = !doc.personName || doc.personName === na;
         const cNA = !doc.country || doc.country === na;
@@ -2550,7 +2556,7 @@ async function scanPDFDocument(ab, originalName) {
     if (!dts.length) dts = [{ type: t('generic_document'), details: '' }];
     let newName = sanitizeFileName(parsed.newFileName || '') || sanitizeFileName(originalName) || 'doc';
     if (!newName.toLowerCase().endsWith('.pdf')) newName += '.pdf';
-    return { documentTypes: dts, personName: (parsed.personName || '').trim() || t('not_specified'), country: (parsed.country || '').trim() || t('not_specified'), summary: (parsed.summary || '').trim().substring(0, 280), newFileName: newName, language: (parsed.language || '').trim(), mainTopic: (parsed.mainTopic || '').trim(), targetAudience: (parsed.targetAudience || '').trim() };
+    return { documentTypes: dts, personName: (parsed.personName || '').trim() || 'Not specified', country: (parsed.country || '').trim() || 'Not specified', summary: (parsed.summary || '').trim().substring(0, 280), newFileName: newName, language: (parsed.language || '').trim(), mainTopic: (parsed.mainTopic || '').trim(), targetAudience: (parsed.targetAudience || '').trim() };
 }
 async function scanSingleDoc(doc) {
     doc.status = 'scanning';
